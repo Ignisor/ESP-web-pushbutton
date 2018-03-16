@@ -1,7 +1,8 @@
-import socket
-import time
-
 import esp; esp.osdebug(None)
+
+import socket
+import sys
+import time
 
 import machine
 import network
@@ -34,9 +35,15 @@ if sta_if.isconnected():
     addr = socket.getaddrinfo(host, 80)[0][-1]
 
     s = socket.socket()
-    s.connect(addr)
-    s.send(bytes('POST /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
+    try:
+        s.connect(addr)
+        s.send(bytes('POST /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
+    except OSError as e:
+        # write exception to file
+        with open('error.log', 'w') as err_file:
+            sys.print_exception(e, err_file)
 
     s.close()
 
+LED.value(1)  # disable LED
 machine.deepsleep()
