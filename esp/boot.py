@@ -32,12 +32,20 @@ while not sta_if.isconnected():
 # send post request to open door
 if sta_if.isconnected():
     _, _, host, path = URL.split('/', 3)
-    addr = socket.getaddrinfo(host, 80)[0][-1]
+
+    try:
+        # try to get address info from domain name
+        addr = socket.getaddrinfo(host, 80)[0][-1]
+    except OSError:
+        # then just parse IP
+        addr = host.split(':')
+        addr[1] = int(addr[1])
 
     s = socket.socket()
     try:
         s.connect(addr)
         s.send(bytes('POST /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
+        time.sleep(1)
     except OSError as e:
         # write exception to file
         with open('error.log', 'w') as err_file:
