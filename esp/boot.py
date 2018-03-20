@@ -34,12 +34,17 @@ if sta_if.isconnected():
     _, _, host, path = URL.split('/', 3)
 
     try:
+        host, port = host.split(':')
+        port = int(port)
+    except ValueError as e:
+        port = 80
+
+    try:
         # try to get address info from domain name
-        addr = socket.getaddrinfo(host, 80)[0][-1]
+        addr = socket.getaddrinfo(host, port)[0][-1]
     except OSError:
         # then just parse IP
-        addr = host.split(':')
-        addr[1] = int(addr[1])
+        addr = (host, port)
 
     s = socket.socket()
     try:
