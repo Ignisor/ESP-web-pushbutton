@@ -1,11 +1,10 @@
 import machine
 import network
 import socket
-import sys
 import time
 
 LED = machine.Pin(1, machine.Pin.OUT)
-BUTTON =  machine.Pin(2, machine.Pin.IN, machine.Pin.PULL_UP)
+BUTTON = machine.Pin(2, machine.Pin.IN, machine.Pin.PULL_UP)
 sta_if = network.WLAN(network.STA_IF)
 URL = 'http://door.gowombat.team/open/'
 
@@ -36,9 +35,7 @@ def send_open_request():
             s.send(bytes('POST /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
             time.sleep(1)
         except OSError as e:
-            # write exception to file
-            with open('error.log', 'w') as err_file:
-                sys.print_exception(e, err_file)
+            pass
 
         s.close()
 
@@ -47,6 +44,11 @@ def send_open_request():
 
 while True:
     if BUTTON.value() == 0:
-        send_open_request()
+        try:
+            send_open_request()
+        except Exception as e:
+            pass
 
     time.sleep(0.1)
+
+machine.reset()

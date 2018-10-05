@@ -19,9 +19,9 @@ if not sta_if.active():
     ap_if.active(False)
 
 # connect to wifi (most settings specified as statics for speedup)
-sta_if.ifconfig(('192.168.1.82', '255.255.255.0', '192.168.1.1', '192.168.1.1'))
-sta_if.config(mac=b'\x18\xfe4\xd5i\x1c', dhcp_hostname='ESP_D5691C')
-sta_if.connect("wombat_3", "fantomas", bssid=b'\xd8P\xe6\xd9$\x10')
+sta_if.ifconfig(('192.168.1.134', '255.255.255.0', '192.168.1.1', '192.168.1.1'))
+sta_if.config(mac=b'\xbc\xdd\xc2\x81\x0c\xba', dhcp_hostname='ESP_810CBA')
+sta_if.connect("wombat_3", "fantomas", bssid=b'\xd8\x50\xe6\xd9\x24\x10')
 
 t_start = time.time()
 while not sta_if.isconnected():
