@@ -1,54 +1,35 @@
 import machine
-import network
-import socket
-import time
+import ubinascii
 
-LED = machine.Pin(1, machine.Pin.OUT)
-BUTTON = machine.Pin(2, machine.Pin.IN, machine.Pin.PULL_UP)
-sta_if = network.WLAN(network.STA_IF)
-URL = 'http://door.gowombat.team/open/'
+from umqtt.simple import MQTTClient
+from data import configure
+from utils.pins import BUTTON, OFF, ON
 
 
-def send_open_request():
-    LED.value(0)
-
-    # send post request to open door
-    if sta_if.isconnected():
-        _, _, host, path = URL.split('/', 3)
-
-        try:
-            host, port = host.split(':')
-            port = int(port)
-        except ValueError as e:
-            port = 80
-
-        try:
-            # try to get address info from domain name
-            addr = socket.getaddrinfo(host, port)[0][-1]
-        except OSError:
-            # then just parse IP
-            addr = (host, port)
-
-        s = socket.socket()
-        try:
-            s.connect(addr)
-            s.send(bytes('POST /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
-            time.sleep(1)
-        except OSError as e:
-            pass
-
-        s.close()
-
-    LED.value(1)
+CLIENT_ID = ubinascii.hexlify(machine.unique_id())
+mqtt = MQTTClient(CLIENT_ID, configure.MQTT_SERVER)
+mqtt.connect()
 
 
+def check_button(pressed):
+    mqtt.publish('button/pressed/{}'.format(CLIENT_ID).encode(), str('down' if pressed else 'up').encode())
+
+
+pressed_button = False
 while True:
-    if BUTTON.value() == 0:
-        try:
-            send_open_request()
-        except Exception as e:
-            pass
+    try:
+        if pressed_button == False and BUTTON.value() == ON:
+            check_button(True)
+            pressed_button = True
+        elif pressed_button == True and BUTTON.value() == OFF:
+            check_button(False)
+            pressed_button = False
+    except Exception as e:
+        with open('errors.txt', 'a') as err_file:
+            err_file.write(str(e))
+            err_file.write('\n')
+        mqtt.publish('errors/{}'.format(CLIENT_ID).encode(), str(e).encode())
 
-    time.sleep(0.1)
+mqtt.disconnect()
 
 machine.reset()
